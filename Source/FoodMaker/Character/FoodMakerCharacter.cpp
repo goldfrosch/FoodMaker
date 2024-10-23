@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "FoodMaker/Assets/Machine/DefaultMachine.h"
+#include "FoodMaker/Player/BasePlayerController.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -44,6 +45,7 @@ AFoodMakerCharacter::AFoodMakerCharacter()
 void AFoodMakerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	InteractionObject();
 }
 
 void AFoodMakerCharacter::InteractionObject()
@@ -58,10 +60,18 @@ void AFoodMakerCharacter::InteractionObject()
 		if (ADefaultMachine* Machine = Cast<ADefaultMachine>(HitResult.GetActor()))
 		{
 			// TODO: 화면에 보일 시 interaction UI 노출
-			UE_LOG(LogTemp, Display, TEXT("Test Result: %s"), *Machine->GetName());
-			UE_LOG(LogTemp, Display, TEXT("Hi BRO"));
+			if (ABasePlayerController* PC = Cast<ABasePlayerController>(GetController()))
+			{
+				PC->SetSelectedInteractiveMachine(Machine);
+			}
 		}
-	}
+	} else
+    {
+     	if (ABasePlayerController* PC = Cast<ABasePlayerController>(GetController()))
+     	{
+     		PC->SetSelectedInteractiveMachine(nullptr);
+     	}
+    }
 }
 
 

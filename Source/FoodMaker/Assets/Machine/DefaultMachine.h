@@ -12,6 +12,8 @@ class FOODMAKER_API ADefaultMachine : public AActor
 public:
 	ADefaultMachine();
 
+	FORCEINLINE FString GetDisplayText() { return DisplayText; }
+
 protected:
 	virtual void BeginPlay() override;
 	
@@ -20,4 +22,7 @@ protected:
 private:
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess=true))
 	TObjectPtr<UStaticMeshComponent> AssetMesh;
+
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess=true))
+	FString DisplayText;
 };
