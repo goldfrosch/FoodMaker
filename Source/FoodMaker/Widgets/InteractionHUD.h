@@ -13,7 +13,7 @@ class FOODMAKER_API UInteractionHUD : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UPROPERTY()
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> InteractionText;
 
 	FORCEINLINE void SetInteractionText(const FString NewText)

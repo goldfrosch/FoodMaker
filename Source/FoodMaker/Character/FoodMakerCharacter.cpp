@@ -8,8 +8,13 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Blueprint/UserWidget.h"
+#include "Engine/OverlapResult.h"
 #include "FoodMaker/Assets/Machine/DefaultMachine.h"
+#include "FoodMaker/Assets/Item/ItemableActor.h"
 #include "FoodMaker/Player/BasePlayerController.h"
+#include "FoodMaker/Player/BasePlayerState.h"
+#include "FoodMaker/Widgets/InventoryUI.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -46,7 +51,45 @@ void AFoodMakerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	InteractionObject();
+	FindDroppedItems();
+	
+	if (!InventoryUI)
+	{
+		InventoryUI = CreateWidget<UInventoryUI>(Cast<APlayerController>(GetController()), InventoryUIClass);
+	}
 }
+
+void AFoodMakerCharacter::FindDroppedItems()
+{
+	FCollisionShape CollisionShape = FCollisionShape::MakeSphere(150);
+	
+	TArray<FOverlapResult> OverlapItemResults;
+	
+	if (GetWorld()->OverlapMultiByChannel(
+		OverlapItemResults,
+		GetActorLocation(),
+		FQuat::Identity,
+		ECC_Visibility,
+		CollisionShape
+	))
+	{
+		if (ABasePlayerState* PS = Cast<ABasePlayerState>(GetPlayerState()))
+		{
+			for (FOverlapResult& OverlapItemResult : OverlapItemResults)
+			{
+				if (AItemableActor* ItemableActor = Cast<AItemableActor>(OverlapItemResult.GetActor()))
+				{
+					UE_LOG(LogTemp, Display, TEXT("하이하이요"))
+					FInventoryData NewItem;
+                	NewItem.ItemInfo = ItemableActor->GetClass();
+                	NewItem.Count = 1;
+					
+					PS->InventoryDataList.Add(NewItem);
+				}
+			}
+		}
+	}}
+
 
 void AFoodMakerCharacter::InteractionObject()
 {
@@ -99,12 +142,25 @@ void AFoodMakerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AFoodMakerCharacter::Look);
+		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Triggered, this, &AFoodMakerCharacter::OpenInventory);
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
 }
+
+void AFoodMakerCharacter::OpenInventory(const FInputActionValue& Value)
+{
+	if (InventoryUI->IsVisible())
+	{
+		InventoryUI->RemoveFromParent();
+	} else
+	{
+		InventoryUI->AddToViewport();
+	}
+}
+
 
 void AFoodMakerCharacter::Move(const FInputActionValue& Value)
 {
@@ -128,6 +184,7 @@ void AFoodMakerCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(RightDirection, MovementVector.X);
 		
 		InteractionObject();
+		FindDroppedItems();
 	}
 }
 

@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "DefaultMachine.generated.h"
 
+class UArrowComponent;
+
 UCLASS()
 class FOODMAKER_API ADefaultMachine : public AActor
 {

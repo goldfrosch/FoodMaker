@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "FoodMakerCharacter.generated.h"
 
+class UInventoryUI;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -43,10 +44,18 @@ class AFoodMakerCharacter : public ACharacter
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* InventoryAction;
 
 public:
-	AFoodMakerCharacter();
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UInventoryUI> InventoryUIClass;
+
+	UPROPERTY()
+	TObjectPtr<UInventoryUI> InventoryUI;
 	
+	AFoodMakerCharacter();
 
 protected:
 
@@ -55,6 +64,8 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	void OpenInventory(const FInputActionValue& Value);
 			
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -70,5 +81,7 @@ public:
 	
 private:
 	void InteractionObject();
+
+	void FindDroppedItems();
 };
 
