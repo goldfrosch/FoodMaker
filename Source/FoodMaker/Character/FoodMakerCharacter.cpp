@@ -11,7 +11,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Engine/OverlapResult.h"
 #include "FoodMaker/Assets/Machine/DefaultMachine.h"
-#include "FoodMaker/Assets/Item/ItemableActor.h"
+#include "FoodMaker/Assets/Item/ItemActor.h"
 #include "FoodMaker/Player/BasePlayerController.h"
 #include "FoodMaker/Player/BasePlayerState.h"
 #include "FoodMaker/Widgets/InventoryUI.h"
@@ -51,7 +51,6 @@ void AFoodMakerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	InteractionObject();
-	FindDroppedItems();
 	
 	if (!InventoryUI)
 	{
@@ -73,19 +72,14 @@ void AFoodMakerCharacter::FindDroppedItems()
 		CollisionShape
 	))
 	{
-		if (ABasePlayerState* PS = Cast<ABasePlayerState>(GetPlayerState()))
+		ABasePlayerState* PS = Cast<ABasePlayerState>(GetPlayerState());
+		check(PS);
+		
+		for (FOverlapResult& OverlapItemResult : OverlapItemResults)
 		{
-			for (FOverlapResult& OverlapItemResult : OverlapItemResults)
+			if (AItemActor* Item = Cast<AItemActor>(OverlapItemResult.GetActor()))
 			{
-				if (AItemableActor* ItemableActor = Cast<AItemableActor>(OverlapItemResult.GetActor()))
-				{
-					UE_LOG(LogTemp, Display, TEXT("하이하이요"))
-					FInventoryData NewItem;
-                	NewItem.ItemInfo = ItemableActor->GetClass();
-                	NewItem.Count = 1;
-					
-					PS->InventoryDataList.Add(NewItem);
-				}
+				PS->AddInventory(Item);
 			}
 		}
 	}}
@@ -142,6 +136,7 @@ void AFoodMakerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AFoodMakerCharacter::Look);
+		EnhancedInputComponent->BindAction(PickupAction, ETriggerEvent::Triggered, this, &AFoodMakerCharacter::FindDroppedItems);
 		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Triggered, this, &AFoodMakerCharacter::OpenInventory);
 	}
 	else
@@ -157,6 +152,10 @@ void AFoodMakerCharacter::OpenInventory(const FInputActionValue& Value)
 		InventoryUI->RemoveFromParent();
 	} else
 	{
+		ABasePlayerState* PS = Cast<ABasePlayerState>(GetPlayerState());
+		check(PS);
+		
+		InventoryUI->SetInventoryData(PS->InventoryList);
 		InventoryUI->AddToViewport();
 	}
 }
@@ -184,7 +183,6 @@ void AFoodMakerCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(RightDirection, MovementVector.X);
 		
 		InteractionObject();
-		FindDroppedItems();
 	}
 }
 
